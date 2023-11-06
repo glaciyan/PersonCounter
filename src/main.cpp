@@ -6,19 +6,14 @@
 
 #include <thread>
 
-#define GPIO_LED (GPIO_NUM_48)
-
-// GPIO assignment
-#define LED_STRIP_BLINK_GPIO 48
-// Numbers of the LED in the strip
-#define LED_STRIP_LED_NUMBERS 1
-// 10MHz resolution, 1 tick = 0.1us (led strip needs a high resolution)
-#define LED_STRIP_RMT_RES_HZ (10 * 1000 * 1000)
+#define GPIO_LED (GPIO_NUM_21)
+#define MYCODE
 
 const char *TAG = "Main";
 
 rmt_encoder_t *bytes;
 
+#ifndef MYCODE
 led_strip_handle_t configure_led(void)
 {
     // LED strip general initialization, according to your led board design
@@ -52,8 +47,8 @@ led_strip_handle_t configure_led(void)
     ESP_LOGI(TAG, "Created LED strip object with RMT backend");
     return led_strip;
 }
+#endif
 
-#define MYCODE
 
 extern "C" void app_main()
 {
@@ -126,6 +121,8 @@ extern "C" void app_main()
 
     int32_t currentSequence = 0;
 
+    ESP_ERROR_CHECK(rmt_enable(channel));
+
     while (true)
     {
         ESP_LOGI(TAG, "LED ON");
@@ -135,12 +132,12 @@ extern "C" void app_main()
         currentSequence = (currentSequence + 1) % 5;
 
         // enable the transmission channel
-        ESP_ERROR_CHECK(rmt_enable(channel));
         ESP_ERROR_CHECK(rmt_transmit(channel, &encoder, &encoder.grb, 3, &transmitConfig));
         ESP_ERROR_CHECK(rmt_tx_wait_all_done(channel, -1));
-        ESP_ERROR_CHECK(rmt_disable(channel));
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
+
+    ESP_ERROR_CHECK(rmt_disable(channel));
 #endif
 }
