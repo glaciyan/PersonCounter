@@ -20,7 +20,7 @@ namespace blinker
 
         rmt_encoder_handle_t bytes;
         rmt_encoder_handle_t copy;
-        LEDEncoderState state;
+        LEDEncoderState state = RESET;
         unsigned char grb[3];
 
         rmt_symbol_word_t code0;
@@ -33,11 +33,11 @@ namespace blinker
             code0.level0 = 1;
             code0.duration0 = 3; // 300ns
             code0.level1 = 0;
-            code0.duration1 = 7; // 700ns
+            code0.duration1 = 9; // 700ns
 
             code1.level0 = 1;
-            code1.duration0 = 7;
-            code1.level1 = 1;
+            code1.duration0 = 9;
+            code1.level1 = 0;
             code1.duration1 = 3;
 
             resetCode.level0 = 0;
@@ -49,6 +49,7 @@ namespace blinker
             rmt_bytes_encoder_config_t bytesEncoderConfig;
             bytesEncoderConfig.bit0 = code0;
             bytesEncoderConfig.bit1 = code1;
+            bytesEncoderConfig.flags.msb_first = 1;
             ESP_ERROR_CHECK(rmt_new_bytes_encoder(&bytesEncoderConfig, &bytes));
 
             // copy encoder
@@ -67,15 +68,16 @@ namespace blinker
 
     size_t led_encode(rmt_encoder_t *encoder, rmt_channel_handle_t tx_channel, const void *primary_data, size_t data_size, rmt_encode_state_t *ret_state)
     {
-        LEDEncoder *ledc = (LEDEncoder *)encoder;
+        LEDEncoder *ledc = static_cast<LEDEncoder *>(encoder);
         rmt_encode_state_t sessionState = RMT_ENCODING_RESET;
         rmt_encode_state_t state = RMT_ENCODING_RESET;
         size_t encodedSymbols = 0;
+        rmt_encoder_handle_t bytesEncoder = ledc->bytes;
+        rmt_encoder_handle_t copyEncoder = ledc->copy;
 
-        switch (ledc->state)
+        if (ledc->state == RESET)
         {
-        case RESET:
-            encodedSymbols += ledc->bytes->encode(ledc->bytes, tx_channel, primary_data, data_size, &sessionState);
+            encodedSymbols += bytesEncoder->encode(bytesEncoder, tx_channel, primary_data, data_size, &sessionState);
             if (sessionState & RMT_ENCODING_COMPLETE)
             {
                 ledc->state = COLORS_DONE;
@@ -85,9 +87,11 @@ namespace blinker
                 state = RMT_ENCODING_MEM_FULL;
                 goto ret;
             }
+        }
 
-        case COLORS_DONE:
-            encodedSymbols += ledc->copy->encode(ledc->copy, tx_channel, &ledc->resetCode, sizeof(ledc->resetCode), &sessionState);
+        if (ledc->state == COLORS_DONE)
+        {
+            encodedSymbols += copyEncoder->encode(copyEncoder, tx_channel, &ledc->resetCode, sizeof(ledc->resetCode), &sessionState);
             if (sessionState & RMT_ENCODING_COMPLETE)
             {
                 ledc->state = RESET;
@@ -107,14 +111,18 @@ namespace blinker
 
     esp_err_t led_reset(rmt_encoder_t *encoder)
     {
-        LEDEncoder *ledc = (LEDEncoder *)encoder;
+        LEDEncoder *ledc = static_cast<LEDEncoder *>(encoder);
+        rmt_encoder_reset(ledc->bytes);
+        rmt_encoder_reset(ledc->copy);
         ledc->state = RESET;
         return ESP_OK;
     }
 
     esp_err_t led_del(rmt_encoder_t *encoder)
     {
-        // LEDEncoder *ledc = (LEDEncoder *)encoder;
+        LEDEncoder *ledc = static_cast<LEDEncoder *>(encoder);
+        rmt_del_encoder(ledc->bytes);
+        rmt_del_encoder(ledc->copy);
         return ESP_OK;
     }
 
