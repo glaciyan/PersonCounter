@@ -16,12 +16,12 @@ namespace blinker
 
     struct LEDEncoder : public rmt_encoder_t
     {
-        const uint16_t resetTime = 2800; // 280us
+        const uint16_t resetTime = 500; // 280us
 
         rmt_encoder_handle_t bytes;
         rmt_encoder_handle_t copy;
         LEDEncoderState state = RESET;
-        unsigned char grb[3];
+        uint8_t grb[3];
 
         rmt_symbol_word_t code0;
         rmt_symbol_word_t code1;
@@ -33,10 +33,10 @@ namespace blinker
             code0.level0 = 1;
             code0.duration0 = 3; // 300ns
             code0.level1 = 0;
-            code0.duration1 = 7; // 700ns
+            code0.duration1 = 9; // 700ns
 
             code1.level0 = 1;
-            code1.duration0 = 7;
+            code1.duration0 = 9;
             code1.level1 = 0;
             code1.duration1 = 3;
 

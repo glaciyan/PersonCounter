@@ -3,10 +3,13 @@
 #include "soc/clk_tree_defs.h"
 #include "LEDEncoder.h"
 #include "led_strip.h"
+#include "color.h"
+#include "freertos/task.h"
 
+#include <cmath>
 #include <thread>
 
-#define GPIO_LED (GPIO_NUM_21)
+#define GPIO_LED (GPIO_NUM_48)
 #define MYCODE
 
 const char *TAG = "Main";
@@ -49,7 +52,6 @@ led_strip_handle_t configure_led(void)
 }
 #endif
 
-
 extern "C" void app_main()
 {
 
@@ -90,7 +92,7 @@ extern "C" void app_main()
 
     channelConfig.resolution_hz = 10'000'000; // 10MHz -> 100ns period
 
-    channelConfig.mem_block_symbols = 48;
+    channelConfig.mem_block_symbols = 64;
     channelConfig.trans_queue_depth = 4; // 4 backlog items, source: my ass
     channelConfig.flags.invert_out = false;
     channelConfig.flags.with_dma = false;
@@ -110,6 +112,8 @@ extern "C" void app_main()
 
     blinker::LEDEncoder encoder{};
 
+    Color color{};
+
     int32_t sequence[6][3] = {
         {1, 0, 0},
         {1, 1, 0},
@@ -121,21 +125,25 @@ extern "C" void app_main()
 
     int32_t currentSequence = 0;
 
+    // enable the transmission channel
     ESP_ERROR_CHECK(rmt_enable(channel));
 
     while (true)
     {
-        ESP_LOGI(TAG, "LED ON");
-        encoder.grb[0] = 255 * sequence[currentSequence][0];
-        encoder.grb[1] = 255 * sequence[currentSequence][1];
-        encoder.grb[2] = 255 * sequence[currentSequence][2];
-        currentSequence = (currentSequence + 1) % 5;
+        TickType_t time = xTaskGetTickCount();
+        // ESP_LOGI(TAG, "%f, %f", time / 100.0, std::sin(time / 100.0) * 255);
+        uint8_t brightness = std::floor(std::sin(time / 100.0) * 127.5) + 127.5;
 
-        // enable the transmission channel
+        encoder.grb[0] = sequence[currentSequence][0] * brightness;
+        encoder.grb[1] = sequence[currentSequence][1] * brightness;
+        encoder.grb[2] = sequence[currentSequence][2] * brightness;
+        // ESP_LOGI(TAG, "brightness: %u", brightness);
+
+        // send out color
         ESP_ERROR_CHECK(rmt_transmit(channel, &encoder, &encoder.grb, 3, &transmitConfig));
         ESP_ERROR_CHECK(rmt_tx_wait_all_done(channel, -1));
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     ESP_ERROR_CHECK(rmt_disable(channel));
