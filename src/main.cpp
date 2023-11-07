@@ -57,7 +57,6 @@ extern "C" void app_main()
     ESP_ERROR_CHECK(rmt_enable(channel));
 
     Color color{};
-    color.setFromHSV(130, 1., 1.);
 
     while (true)
     {
@@ -67,15 +66,16 @@ extern "C" void app_main()
         // uint16_t hue = std::ceil(std::sin(time / 100.0) * 127.5) + 127.5;
         // uint8_t hue = (time / 2) & 255;
         double hue = (std::sin(time / 100.0) * 180) + 180;
-        printf(">hue:%f\n", hue);
-        color.setFromHSV(hue, 1., 1);
+        color.setFromHSV(hue, 1.0, 1.0);
 
         encoder.grb[0] = color.green;
         encoder.grb[1] = color.red;
         encoder.grb[2] = color.blue;
-        printf(">red:%u\n", color.red);
-        printf(">green:%u\n", color.green);
-        printf(">blue:%u\n", color.blue);
+
+        // printf(">hue:%f\n", hue);
+        // printf(">red:%u\n", color.red);
+        // printf(">green:%u\n", color.green);
+        // printf(">blue:%u\n", color.blue);
 
         // encoder.grb[0] = sequence[currentSequence][0] * brightness;
         // encoder.grb[1] = sequence[currentSequence][1] * brightness;
