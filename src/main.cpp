@@ -28,12 +28,14 @@ extern "C" void app_main()
         TickType_t time = xTaskGetTickCount();
         double hue = (std::sin(time / 200.0) * 180) + 180;
 
-        led.color.setFromHSV(hue, 1.0, 0.08); // On the Atom Matrix we need to reduce value, otherwise we damage components
+        led.color.setFromHSV(hue, 1.0, 0.08); // On the Atom Matrix we need to reduce the value, otherwise we damage components
 
-        // printf(">hue:%f\n", hue);
-        // printf(">red:%u\n", led.color.red);
-        // printf(">green:%u\n", led.color.green);
-        // printf(">blue:%u\n", led.color.blue);
+#ifdef PLOTTING
+        printf(">hue:%f\n", hue);
+        printf(">red:%u\n", led.color.red);
+        printf(">green:%u\n", led.color.green);
+        printf(">blue:%u\n", led.color.blue);
+#endif
 
         // send out color
         led.transmit();
