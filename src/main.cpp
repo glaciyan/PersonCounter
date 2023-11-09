@@ -14,13 +14,11 @@
 
 const char *TAG = "Main";
 
-rmt_encoder_t *bytes;
-
 extern "C" void app_main()
 {
     ESP_LOGI(TAG, "Minimum free heap size: %" PRIu32 " bytes\n", esp_get_minimum_free_heap_size());
 
-    led::Strip<GPIO_LED> led{};
+    led::Strip<GPIO_LED, LED_COUNT> led{};
     led.enable();
 
     ESP_LOGI(TAG, "Minimum free heap size: %" PRIu32 " bytes\n", esp_get_minimum_free_heap_size());
@@ -28,8 +26,9 @@ extern "C" void app_main()
     while (true)
     {
         TickType_t time = xTaskGetTickCount();
-        double hue = (std::sin(time / 100.0) * 180) + 180;
-        led.color.setFromHSV(hue, 1.0, 1.0);
+        double hue = (std::sin(time / 200.0) * 180) + 180;
+
+        led.color.setFromHSV(hue, 1.0, 0.08); // On the Atom Matrix we need to reduce value, otherwise we damage components
 
         // printf(">hue:%f\n", hue);
         // printf(">red:%u\n", led.color.red);

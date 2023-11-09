@@ -6,10 +6,11 @@
 #include "Color.h"
 
 #include <array>
+#include <cstring>
 
 namespace led
 {
-    template <unsigned int GpioPin>
+    template <unsigned int GpioPin, uint16_t Leds>
     struct Strip final
     {
         Color color{};
@@ -22,7 +23,12 @@ namespace led
 
             channelConfig.resolution_hz = 10'000'000; // 10MHz -> 100ns period
 
+#ifdef CHIP_ESP32S3
             channelConfig.mem_block_symbols = 48;
+#else
+            channelConfig.mem_block_symbols = 64;
+#endif
+
             channelConfig.trans_queue_depth = 4;
             channelConfig.flags.invert_out = false;
             channelConfig.flags.with_dma = false;
@@ -45,7 +51,16 @@ namespace led
         void transmit()
         {
             auto colorArray = color.asGRB();
-            ESP_ERROR_CHECK(rmt_transmit(channel, &encoder, colorArray.data(), sizeof(Color), &transmitConfig));
+
+            // TODO quick hack to see if this works, do proper strip
+            uint8_t buffer[Leds][3];
+
+            for (int i = 0; i < Leds; i++)
+            {
+                std::memcpy(buffer[i], colorArray.data(), 3);
+            }
+
+            ESP_ERROR_CHECK(rmt_transmit(channel, &encoder, buffer, sizeof(Color) * Leds, &transmitConfig));
             ESP_ERROR_CHECK(rmt_tx_wait_all_done(channel, -1));
         }
 

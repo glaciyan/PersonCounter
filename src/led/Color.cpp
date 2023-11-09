@@ -32,6 +32,12 @@ namespace led
 
     void Color::setFromHSV(const int16_t hue, const double s, const double v)
     {
+        if (s < 0.001)
+        {
+            this->red = this->green = this->blue = v * 255;
+            return;
+        }
+
         double interval = hue / 60.;
         int16_t hi = std::floor(interval);
         double f = interval - hi;
