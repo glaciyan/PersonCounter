@@ -91,4 +91,11 @@ namespace led
         std::array<uint8_t, 3> array{this->green, this->red, this->blue};
         return array;
     }
+
+    void Color::clear()
+    {
+        this->red = 0;
+        this->green = 0;
+        this->blue = 0;
+    }
 }
