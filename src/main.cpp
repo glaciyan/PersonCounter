@@ -251,7 +251,9 @@ extern "C" void app_main()
     ESP_LOGI(TAG, "WIFI SoftAP started.");
     forceRunAnimation(&green_pulse);
     runAnimation(&green_pulse);
-    runAnimation(&fade);
+
+    // show off mode
+    // runAnimation(&fade);
 
     // int clear = LEDAnimation::CLEAR;
     // BaseType_t rs2 = xQueueSend(led_queue, &clear, 0);
