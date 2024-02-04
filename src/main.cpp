@@ -21,13 +21,13 @@
 #include <numbers>
 #include <unordered_map>
 
-#define EXAMPLE_ESP_WIFI_SSID "esp32-wifi"
+#define EXAMPLE_ESP_WIFI_SSID "pc-wifi"
 #define EXAMPLE_ESP_WIFI_PASS "AB54ADADNdfry832372DBNAORuBmacbe"
 #define EXAMPLE_ESP_WIFI_CHANNEL 5
 #define EXAMPLE_MAX_STA_CONN 6
 
-#define MaxDeviceAge std::chrono::seconds(15)
-// #define MaxDeviceAge std::chrono::minutes(4)
+// #define MaxDeviceAge std::chrono::seconds(15)
+#define MaxDeviceAge std::chrono::minutes(4)
 
 std::mutex devices_mutex;
 std::unordered_map<std::string, std::chrono::system_clock::time_point> devices{};
